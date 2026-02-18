@@ -1,7 +1,10 @@
 import React from 'react';
 import { Trash2, Plus } from 'lucide-react';
+import { useFinance } from '../../context/FinanceContext';
 
 const TransactionList = ({ title, data, type, onDelete, emptyMsg, onAdd }) => {
+    const { formatCurrency } = useFinance();
+
     const checkDueSoon = (date) => {
         if (!date) return false;
         const today = new Date();
@@ -16,7 +19,7 @@ const TransactionList = ({ title, data, type, onDelete, emptyMsg, onAdd }) => {
             <div className="flex justify-between items-center mb-4">
                 <h1>{title}</h1>
                 {title === 'Subscriptions' && (
-                    <span className="text-muted text-sm">Monthly: ${data.reduce((acc, c) => acc + (c.cycle === 'yearly' ? c.amount / 12 : c.amount), 0).toFixed(2)}</span>
+                    <span className="text-muted text-sm">Monthly: {formatCurrency(data.reduce((acc, c) => acc + (c.cycle === 'yearly' ? c.amount / 12 : c.amount), 0))}</span>
                 )}
             </div>
             {data.length === 0 ? (
@@ -37,7 +40,7 @@ const TransactionList = ({ title, data, type, onDelete, emptyMsg, onAdd }) => {
                             </div>
                             <div className="flex items-center gap-4">
                                 <div style={{ fontWeight: 700, color: type === 'expense' ? 'var(--text-main)' : 'var(--success)' }}>
-                                    {type === 'expense' ? '-' : type === 'sub' ? '' : '+'} ${Number(item.amount).toLocaleString()}
+                                    {type === 'expense' ? '-' : type === 'sub' ? '' : '+'} {formatCurrency(item.amount)}
                                     {type === 'sub' && <span className="text-muted" style={{ fontSize: '0.7em', fontWeight: 400 }}>/{item.cycle === 'yearly' ? 'yr' : 'mo'}</span>}
                                 </div>
                                 <button onClick={() => onDelete(item.id)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: 4 }}>

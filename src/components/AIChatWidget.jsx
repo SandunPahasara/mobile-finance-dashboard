@@ -3,7 +3,7 @@ import { Banknote, Edit, TrendingUp } from 'lucide-react';
 import { useFinance } from '../context/FinanceContext';
 
 const AIChatWidget = () => {
-    const { expenses, income, subscriptions, savingsGoal, totals } = useFinance();
+    const { expenses, income, subscriptions, savingsGoal, totals, currency, user } = useFinance();
     const [isOpen, setIsOpen] = useState(false);
     const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || '');
     const [messages, setMessages] = useState(() => {
@@ -34,14 +34,15 @@ const AIChatWidget = () => {
 
         // Prepare context
         const context = `
-            Current Financial Context:
-            - Total Income: $${totals.totalInc}
-            - Total Expenses: $${totals.totalExp}
-            - Net Savings: $${totals.net}
-            - Monthly Subscriptions: $${totals.monthlySubCost}
-            - Savings Goal: $${savingsGoal.target} (Current: $${totals.net})
-            - Top Expenses: ${expenses.slice(0, 5).map(e => `${e.category}: $${e.amount}`).join(', ')}
-            - Recent Transactions: ${expenses.slice(0, 3).map(e => `${e.date}: ${e.category} -$${e.amount}`).join(', ')}
+            Current Financial Context for ${user?.name || 'User'}:
+            - Currency: ${currency.name} (${currency.symbol})
+            - Total Income: ${currency.symbol}${totals.totalInc}
+            - Total Expenses: ${currency.symbol}${totals.totalExp}
+            - Net Savings: ${currency.symbol}${totals.net}
+            - Monthly Subscriptions: ${currency.symbol}${totals.monthlySubCost}
+            - Savings Goal: ${currency.symbol}${savingsGoal.target} (Current: ${currency.symbol}${totals.net})
+            - Top Expenses: ${expenses.slice(0, 5).map(e => `${e.category}: ${currency.symbol}${e.amount}`).join(', ')}
+            - Recent Transactions: ${expenses.slice(0, 3).map(e => `${e.date}: ${e.category} -${currency.symbol}${e.amount}`).join(', ')}
         `;
 
         const systemPrompt = {

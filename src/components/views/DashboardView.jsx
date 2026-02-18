@@ -8,7 +8,7 @@ import { useFinance } from '../../context/FinanceContext';
 import { CATEGORIES } from '../../utils/constants';
 
 const DashboardView = ({ onOpenModal }) => {
-    const { totals, expenses, income, subscriptions, savingsGoal } = useFinance();
+    const { totals, expenses, income, subscriptions, savingsGoal, formatCurrency, user } = useFinance();
 
     // Prepare Chart Data
     const pieData = useMemo(() => {
@@ -59,10 +59,10 @@ const DashboardView = ({ onOpenModal }) => {
             <header className="flex justify-between items-center mb-4 animate-enter">
                 <div>
                     <h1>Overview</h1>
-                    <p className="text-muted">Welcome back</p>
+                    <p className="text-muted">Welcome back, {user?.name || 'User'}</p>
                 </div>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #64ffda 0%, #0a192f 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontWeight: 'bold', color: '#020c1b' }}>YOU</span>
+                    <span style={{ fontWeight: 'bold', color: '#020c1b' }}>{(user?.name || 'U').charAt(0).toUpperCase()}</span>
                 </div>
             </header>
 
@@ -70,21 +70,21 @@ const DashboardView = ({ onOpenModal }) => {
             <div className="animate-enter delay-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
                 <div className="card">
                     <div className="flex items-center gap-2 mb-2 text-muted text-sm"><TrendingUp size={16} /> Income</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>${totals.totalInc.toLocaleString()}</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{formatCurrency(totals.totalInc)}</div>
                 </div>
                 <div className="card">
                     <div className="flex items-center gap-2 mb-2 text-muted text-sm"><Wallet size={16} /> Expenses</div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>${totals.totalExp.toLocaleString()}</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{formatCurrency(totals.totalExp)}</div>
                 </div>
                 <div className="card" onClick={() => onOpenModal('goal')} style={{ gridColumn: '1 / -1', cursor: 'pointer', background: 'linear-gradient(180deg, var(--bg-card) 0%, rgba(100,255,218,0.05) 100%)' }}>
                     <div className="flex justify-between items-end">
                         <div>
                             <div className="flex items-center gap-2 text-muted text-sm mb-1">Total Savings <Edit size={14} /></div>
-                            <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--accent)' }}>${totals.net.toLocaleString()}</div>
+                            <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--accent)' }}>{formatCurrency(totals.net)}</div>
                         </div>
-                        <div className="text-sm text-muted">Goal: ${savingsGoal.target.toLocaleString()}</div>
+                        <div className="text-sm text-muted">Goal: {formatCurrency(savingsGoal.target)}</div>
                     </div>
-                    <div style={{ height: 6, width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginTop: 15, overflow: 'hidden' }}>
+                    <div style={{ height: 6, width: '100%', background: 'var(--chart-grid)', borderRadius: 3, marginTop: 15, overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${savingsProgress}%`, background: 'var(--accent)', transition: 'width 1s ease' }}></div>
                     </div>
                 </div>
@@ -102,12 +102,13 @@ const DashboardView = ({ onOpenModal }) => {
                                     <stop offset="95%" stopColor="#64ffda" stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8892b0' }} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
                             <YAxis hide />
                             <Tooltip
-                                contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 }}
-                                cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+                                contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }}
+                                cursor={{ stroke: 'var(--border-color)' }}
+                                itemStyle={{ color: 'var(--text-main)' }}
                             />
                             <Area type="monotone" dataKey="growth" stroke="#64ffda" fillOpacity={1} fill="url(#colorGrowth)" strokeWidth={2} />
                         </AreaChart>
@@ -119,7 +120,7 @@ const DashboardView = ({ onOpenModal }) => {
             <div className="card animate-enter delay-300 mb-4">
                 <div className="flex justify-between items-center mb-4">
                     <h3>Active Subscriptions</h3>
-                    <span className="text-muted text-sm">${totals.monthlySubCost.toFixed(2)}/mo</span>
+                    <span className="text-muted text-sm">{formatCurrency(totals.monthlySubCost)}/mo</span>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
                     {subscriptions.length === 0 ? <div className="text-muted text-sm">No subscriptions yet.</div> :
@@ -130,8 +131,8 @@ const DashboardView = ({ onOpenModal }) => {
                                 display: 'flex', flexDirection: 'column', gap: 4
                             }}>
                                 <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub.name}</div>
-                                <div className="text-muted text-sm">${sub.amount}</div>
-                                <div style={{ fontSize: '0.7rem', color: '#64ffda' }}>{sub.cycle}</div>
+                                <div className="text-muted text-sm">{formatCurrency(sub.amount)}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--accent)' }}>{sub.cycle}</div>
                             </div>
                         ))
                     }
@@ -144,12 +145,13 @@ const DashboardView = ({ onOpenModal }) => {
                 <div style={{ width: '100%', height: 220, fontSize: '12px' }}>
                     <ResponsiveContainer>
                         <BarChart data={monthlyData}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8892b0' }} />
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--chart-grid)" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)' }} />
                             <YAxis hide />
                             <Tooltip
-                                contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 }}
-                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }}
+                                cursor={{ fill: 'var(--chart-grid)' }}
+                                itemStyle={{ color: 'var(--text-main)' }}
                             />
                             <Bar dataKey="income" fill="#64ffda" radius={[4, 4, 0, 0]} stackId="a" />
                             <Bar dataKey="expense" fill="#ff6b6b" radius={[4, 4, 0, 0]} stackId="a" />
@@ -171,10 +173,10 @@ const DashboardView = ({ onOpenModal }) => {
                                     ))}
                                 </Pie>
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }}
-                                    itemStyle={{ color: '#fff' }}
+                                    contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', borderRadius: 8, color: 'var(--text-main)' }}
+                                    itemStyle={{ color: 'var(--text-main)' }}
                                 />
-                                <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" wrapperStyle={{ fontSize: '0.8rem', color: '#8892b0' }} />
+                                <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" wrapperStyle={{ fontSize: '0.8rem', color: 'var(--text-muted)' }} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
