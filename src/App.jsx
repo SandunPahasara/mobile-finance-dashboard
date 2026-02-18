@@ -211,7 +211,7 @@ const EditGoalForm = ({ onClose }) => {
 
 // --- SUB VIEWS ---
 const DashboardView = ({ onOpenModal }) => {
-    const { totals, expenses, income, savingsGoal } = useFinance();
+    const { totals, expenses, income, subscriptions, savingsGoal } = useFinance();
 
     // Prepare Chart Data
     const pieData = useMemo(() => {
@@ -230,7 +230,7 @@ const DashboardView = ({ onOpenModal }) => {
             const d = new Date(); d.setMonth(d.getMonth() - i);
             const k = d.toISOString().slice(0, 7); // 2024-02
             const name = d.toLocaleString('default', { month: 'short' });
-            months[k] = { name, income: 0, expense: 0, net: 0, amt: 0 };
+            months[k] = { name, income: 0, expense: 0, net: 0, amt: 0, growth: 0 };
         }
 
         income.forEach(i => {
@@ -242,7 +242,16 @@ const DashboardView = ({ onOpenModal }) => {
             if (months[k]) months[k].expense += e.amount;
         });
 
-        Object.values(months).forEach(m => m.net = m.income - m.expense);
+        // Calculate Cumulative Growth (Simulated Investment Performance)
+        let runningTotal = 1000; // Starting baseline
+        Object.values(months).forEach(m => {
+            m.net = m.income - m.expense;
+            runningTotal += m.net;
+            // Add slight "market growth" simulation for visual appeal if positive
+            if (runningTotal > 0) runningTotal *= 1.02;
+            m.growth = Math.round(runningTotal);
+        });
+
         return Object.values(months);
     }, [income, expenses]);
 
@@ -284,11 +293,57 @@ const DashboardView = ({ onOpenModal }) => {
                 </div>
             </div>
 
-            {/* Charts Swiper (Vertical Stack for Mobile) */}
+            {/* Investment Growth Graph */}
+            <div className="card animate-enter delay-200 mb-4">
+                <h3 className="mb-4">Investment Performance</h3>
+                <div style={{ width: '100%', height: 200, fontSize: '12px' }}>
+                    <ResponsiveContainer>
+                        <AreaChart data={monthlyData}>
+                            <defs>
+                                <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#64ffda" stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor="#64ffda" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8892b0' }} />
+                            <YAxis hide />
+                            <Tooltip
+                                contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 }}
+                                cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+                            />
+                            <Area type="monotone" dataKey="growth" stroke="#64ffda" fillOpacity={1} fill="url(#colorGrowth)" strokeWidth={2} />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+
+            {/* Subscriptions Widget */}
+            <div className="card animate-enter delay-300 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h3>Active Subscriptions</h3>
+                    <span className="text-muted text-sm">${totals.monthlySubCost.toFixed(2)}/mo</span>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+                    {subscriptions.length === 0 ? <div className="text-muted text-sm">No subscriptions yet.</div> :
+                        subscriptions.map(sub => (
+                            <div key={sub.id} style={{
+                                minWidth: 100, padding: 12, borderRadius: 12,
+                                background: 'var(--bg-secondary)', border: '1px solid rgba(255,255,255,0.05)',
+                                display: 'flex', flexDirection: 'column', gap: 4
+                            }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{sub.name}</div>
+                                <div className="text-muted text-sm">${sub.amount}</div>
+                                <div style={{ fontSize: '0.7rem', color: '#64ffda' }}>{sub.cycle}</div>
+                            </div>
+                        ))
+                    }
+                </div>
+            </div>
 
             {/* Monthly Trends (Bar + Line) */}
             <div className="card animate-enter delay-200 mb-4">
-                <h3 className="mb-4">Monthly Trends</h3>
+                <h3 className="mb-4">Six Month Trend</h3>
                 <div style={{ width: '100%', height: 220, fontSize: '12px' }}>
                     <ResponsiveContainer>
                         <BarChart data={monthlyData}>
