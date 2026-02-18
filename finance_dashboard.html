@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Finance Dashboard</title>
+
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- React & Recharts -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
+
+    <style>
+        :root {
+            --bg-primary: #020c1b;
+            --bg-secondary: #0a192f;
+            --bg-card: #112240;
+            --text-main: #ccd6f6;
+            --text-muted: #8892b0;
+            --accent: #64ffda;
+            --accent-rgb: 100, 255, 218;
+            --error: #ff6b6b;
+            --success: #06d6a0;
+            --warning: #ffd166;
+
+            --font-body: 'Inter', sans-serif;
+            --font-heading: 'Inter Tight', sans-serif;
+            --nav-height: 70px;
+        }
+
+        /* Core Reset & Base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: calc(var(--nav-height) + 30px);
+            overflow-x: hidden;
+            overflow-y: scroll;
+        }
+
+        /* Typography */
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: var(--font-heading);
+            color: var(--text-main);
+            line-height: 1.1;
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+        }
+
+        button,
+        input,
+        select {
+            font-family: var(--font-body);
+        }
+
+        /* Utilities */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .text-accent {
+            color: var(--accent);
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .text-sm {
+            font-size: 0.85rem;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        /* Components */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(2, 12, 27, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: 0 4px 14px rgba(100, 255, 218, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-float {
+            position: fixed;
+            bottom: calc(var(--nav-height) + 20px);
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: 0 8px 30px rgba(100, 255, 218, 0.5);
+            z-index: 90;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 12, 27, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: flex-end;
+            /* Mobile default bottom sheet */
+            justify-content: center;
+            opacity: 0;
+            animation: fadeIn 0.2s forwards;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @media (min-width: 600px) {
+            .modal-overlay {
+                align-items: center;
+            }
+
+            .modal-content {
+                border-radius: 24px;
+            }
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-primary);
+            border: 1px solid #233554;
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 1rem;
+            appearance: none;
+            /* remove default arrow */
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--accent);
+            outline: none;
+        }
+
+        /* Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--nav-height);
+            background: rgba(17, 34, 64, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+        }
+
+        .nav-item.active svg {
+            transform: translateY(-2px);
+            stroke-width: 2.5;
+        }
+
+        .nav-item svg {
+            transition: all 0.2s;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-enter {
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+        }
+
+        /* List Items */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+        }
+
+        .list-item:hover {
+            border-color: rgba(100, 255, 218, 0.1);
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .badge-alert {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useContext, createContext, useMemo } = React;
+        const {
+            BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
+            XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+        } = Recharts;
+
+        // --- ICONS ---
+        const Icons = {
+            Dash: ({ s = 24 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="9" rx="1" /><rect x="14" y="3" width="7" height="5" rx="1" /><rect x="14" y="12" width="7" height="9" rx="1" /><rect x="3" y="16" width="7" height="5" rx="1" /></svg>,
+            Money: ({ s = 24 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8" /><path d="M16 8v0" /><path d="M12 16v0" /><path d="M8 12v0" /><path d="M12 8v0" /></svg>,
+            Wallet: ({ s = 24 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></svg>,
+            Card: ({ s = 24 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>,
+            Plus: ({ s = 24 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>,
+            Trash: ({ s = 18 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-1 1-1h6c1 0 1 1 1 1v2" /></svg>,
+            Trending: ({ s = 24 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>,
+            Edit: ({ s = 18 }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /><path d="m15 5 4 4" /></svg>
+        };
+
+        // --- CONSTANTS ---
+        const CATEGORIES = {
+            Housing: '#FF6B6B',
+            Food: '#FFD166',
+            Transport: '#06D6A0',
+            Health: '#118AB2',
+            Entertainment: '#EF476F',
+            Personal: '#9D4EDD',
+            Other: '#8892B0'
+        };
+
+        // --- CONTEXT ---
+        const FinanceContext = createContext();
+
+        const FinanceProvider = ({ children }) => {
+            const [expenses, setExpenses] = useState(() => JSON.parse(localStorage.getItem('finance_expenses')) || []);
+            const [income, setIncome] = useState(() => JSON.parse(localStorage.getItem('finance_income')) || []);
+            const [subscriptions, setSubscriptions] = useState(() => JSON.parse(localStorage.getItem('finance_subs')) || []);
+            const [savingsGoal, setSavingsGoal] = useState(() => JSON.parse(localStorage.getItem('finance_goal')) || { target: 10000, deadline: '', current: 0 });
+
+            useEffect(() => localStorage.setItem('finance_expenses', JSON.stringify(expenses)), [expenses]);
+            useEffect(() => localStorage.setItem('finance_income', JSON.stringify(income)), [income]);
+            useEffect(() => localStorage.setItem('finance_subs', JSON.stringify(subscriptions)), [subscriptions]);
+            useEffect(() => localStorage.setItem('finance_goal', JSON.stringify(savingsGoal)), [savingsGoal]);
+
+            const addExpense = (item) => setExpenses(prev => [{ ...item, id: Date.now().toString(), amount: parseFloat(item.amount) }, ...prev]);
+            const deleteExpense = (id) => setExpenses(prev => prev.filter(i => i.id !== id));
+
+            const addIncome = (item) => setIncome(prev => [{ ...item, id: Date.now().toString(), amount: parseFloat(item.amount) }, ...prev]);
+            const deleteIncome = (id) => setIncome(prev => prev.filter(i => i.id !== id));
+
+            const addSubscription = (item) => setSubscriptions(prev => [{ ...item, id: Date.now().toString(), amount: parseFloat(item.amount) }, ...prev]);
+            const deleteSubscription = (id) => setSubscriptions(prev => prev.filter(i => i.id !== id));
+
+            const updateGoal = (goal) => setSavingsGoal(goal);
+
+            const totals = useMemo(() => {
+                const totalExp = expenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                const totalInc = income.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+                const net = totalInc - totalExp;
+
+                const monthlySubCost = subscriptions.reduce((acc, curr) => {
+                    return acc + (curr.cycle === 'yearly' ? (curr.amount / 12) : curr.amount);
+                }, 0);
+
+                return { totalExp, totalInc, net, monthlySubCost };
+            }, [expenses, income, subscriptions]);
+
+            return (
+                <FinanceContext.Provider value={{
+                    expenses, income, subscriptions, savingsGoal, setSavingsGoal: updateGoal,
+                    addExpense, deleteExpense, addIncome, deleteIncome, addSubscription, deleteSubscription,
+                    totals
+                }}>
+                    {children}
+                </FinanceContext.Provider>
+            );
+        };
+
+        const useFinance = () => useContext(FinanceContext);
+
+        // --- COMPONENTS ---
+        const Modal = ({ isOpen, onClose, title, children }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="modal-overlay open" onClick={(e) => e.target === e.currentTarget && onClose()}>
+                    <div className="modal-content">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2>{title}</h2>
+                            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                        </div>
+                        {children}
+                    </div>
+                </div>
+            );
+        };
+
+        const AddTransactionForm = ({ type, onClose }) => {
+            const { addExpense, addIncome } = useFinance();
+            const [amount, setAmount] = useState('');
+            const [category, setCategory] = useState(type === 'expense' ? 'Food' : 'Salary');
+            const [note, setNote] = useState('');
+            const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!amount) return;
+
+                const item = { amount, category, note: note || (type === 'expense' ? category : 'Income'), date };
+
+                if (type === 'expense') addExpense(item);
+                else addIncome({ ...item, source: category });
+
+                onClose();
+            };
+
+            return (
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label">Amount</label>
+                        <input type="number" className="form-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" autoFocus required step="0.01" />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">{type === 'expense' ? 'Category' : 'Source'}</label>
+                        {type === 'expense' ? (
+                            <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
+                                {Object.keys(CATEGORIES).map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        ) : (
+                            <input type="text" className="form-input" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Salary, Freelance" />
+                        )}
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Date</label>
+                        <input type="date" className="form-input" value={date} onChange={e => setDate(e.target.value)} />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label">Note (Optional)</label>
+                        <input type="text" className="form-input" value={note} onChange={e => setNote(e.target.value)} placeholder="Details..." />
+                    </div>
+
+                    <button type="submit" className="btn btn-primary w-full">Save {type === 'expense' ? 'Expense' : 'Income'}</button>
+                </form>
+            );
+        };
+
+        const AddSubForm = ({ onClose }) => {
+            const { addSubscription } = useFinance();
+            const [name, setName] = useState('');
+            const [amount, setAmount] = useState('');
+            const [cycle, setCycle] = useState('monthly');
+            const [nextDue, setNextDue] = useState(new Date().toISOString().split('T')[0]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!name || !amount) return;
+                addSubscription({ name, amount, cycle, nextDue });
+                onClose();
+            };
+
+            return (
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label">Service Name</label>
+                        <input className="form-input" value={name} onChange={e => setName(e.target.value)} placeholder="Netflix, Spotify..." autoFocus required />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Amount</label>
+                        <input type="number" className="form-input" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" required step="0.01" />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Billing Cycle</label>
+                        <select className="form-select" value={cycle} onChange={e => setCycle(e.target.value)}>
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Next Due Date</label>
+                        <input type="date" className="form-input" value={nextDue} onChange={e => setNextDue(e.target.value)} />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-full">Add Subscription</button>
+                </form>
+            );
+        }
+
+        const EditGoalForm = ({ onClose }) => {
+            const { savingsGoal, setSavingsGoal } = useFinance();
+            const [target, setTarget] = useState(savingsGoal.target);
+            const [deadline, setDeadline] = useState(savingsGoal.deadline);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setSavingsGoal({ ...savingsGoal, target: parseFloat(target), deadline });
+                onClose();
+            }
+
+            return (
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label className="form-label">Target Amount</label>
+                        <input type="number" className="form-input" value={target} onChange={e => setTarget(e.target.value)} required step="100" />
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label">Deadline (Optional)</label>
+                        <input type="date" className="form-input" value={deadline} onChange={e => setDeadline(e.target.value)} />
+                    </div>
+                    <button type="submit" className="btn btn-primary w-full">Update Goal</button>
+                </form>
+            );
+        }
+
+        // --- SUB VIEWS ---
+        const DashboardView = ({ onOpenModal }) => {
+            const { totals, expenses, income, savingsGoal } = useFinance();
+
+            // Prepare Chart Data
+            const pieData = useMemo(() => {
+                const map = {};
+                expenses.forEach(e => {
+                    map[e.category] = (map[e.category] || 0) + e.amount;
+                });
+                return Object.keys(map).map(k => ({ name: k, value: map[k], color: CATEGORIES[k] }))
+                    .filter(i => i.value > 0);
+            }, [expenses]);
+
+            const monthlyData = useMemo(() => {
+                const months = {};
+                // Init last 6 months
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(); d.setMonth(d.getMonth() - i);
+                    const k = d.toISOString().slice(0, 7); // 2024-02
+                    const name = d.toLocaleString('default', { month: 'short' });
+                    months[k] = { name, income: 0, expense: 0, net: 0, amt: 0 };
+                }
+
+                income.forEach(i => {
+                    const k = i.date.slice(0, 7);
+                    if (months[k]) months[k].income += i.amount;
+                });
+                expenses.forEach(e => {
+                    const k = e.date.slice(0, 7);
+                    if (months[k]) months[k].expense += e.amount;
+                });
+
+                Object.values(months).forEach(m => m.net = m.income - m.expense);
+                return Object.values(months);
+            }, [income, expenses]);
+
+            const savingsProgress = Math.min(100, Math.max(0, (totals.net / savingsGoal.target) * 100));
+
+            return (
+                <div className="container" style={{ paddingBottom: 80 }}>
+                    <header className="flex justify-between items-center mb-4 animate-enter">
+                        <div>
+                            <h1>Overview</h1>
+                            <p className="text-muted">Welcome back</p>
+                        </div>
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #64ffda 0%, #0a192f 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ fontWeight: 'bold', color: '#020c1b' }}>YOU</span>
+                        </div>
+                    </header>
+
+                    {/* Metric Cards */}
+                    <div className="animate-enter delay-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                        <div className="card">
+                            <div className="flex items-center gap-2 mb-2 text-muted text-sm"><Icons.Trending s={16} /> Income</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>${totals.totalInc.toLocaleString()}</div>
+                        </div>
+                        <div className="card">
+                            <div className="flex items-center gap-2 mb-2 text-muted text-sm"><Icons.Wallet s={16} /> Expenses</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>${totals.totalExp.toLocaleString()}</div>
+                        </div>
+                        <div className="card" onClick={() => onOpenModal('goal')} style={{ gridColumn: '1 / -1', cursor: 'pointer', background: 'linear-gradient(180deg, var(--bg-card) 0%, rgba(100,255,218,0.05) 100%)' }}>
+                            <div className="flex justify-between items-end">
+                                <div>
+                                    <div className="flex items-center gap-2 text-muted text-sm mb-1">Total Savings <Icons.Edit s={14} /></div>
+                                    <div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--accent)' }}>${totals.net.toLocaleString()}</div>
+                                </div>
+                                <div className="text-sm text-muted">Goal: ${savingsGoal.target.toLocaleString()}</div>
+                            </div>
+                            <div style={{ height: 6, width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginTop: 15, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${savingsProgress}%`, background: 'var(--accent)', transition: 'width 1s ease' }}></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Charts Swiper (Vertical Stack for Mobile) */}
+
+                    {/* Monthly Trends (Bar + Line) */}
+                    <div className="card animate-enter delay-200 mb-4">
+                        <h3 className="mb-4">Monthly Trends</h3>
+                        <div style={{ width: '100%', height: 220, fontSize: '12px' }}>
+                            <ResponsiveContainer>
+                                <BarChart data={monthlyData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#8892b0' }} />
+                                    <YAxis hide />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8 }}
+                                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                    />
+                                    <Bar dataKey="income" fill="#64ffda" radius={[4, 4, 0, 0]} stackId="a" />
+                                    <Bar dataKey="expense" fill="#ff6b6b" radius={[4, 4, 0, 0]} stackId="a" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* Expense Breakdown */}
+                    {pieData.length > 0 && (
+                        <div className="card animate-enter delay-300 mb-4">
+                            <h3 className="mb-4">Spending Breakdown</h3>
+                            <div style={{ width: '100%', height: 200 }}>
+                                <ResponsiveContainer>
+                                    <PieChart>
+                                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                                            {pieData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color || '#8884d8'} stroke="var(--bg-card)" strokeWidth={2} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--bg-card)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: 8, color: '#fff' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                        <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" wrapperStyle={{ fontSize: '0.8rem', color: '#8892b0' }} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const TransactionList = ({ title, data, type, onDelete, emptyMsg, onAdd }) => {
+            const checkDueSoon = (date) => {
+                if (!date) return false;
+                const today = new Date();
+                const due = new Date(date);
+                const diffTime = due - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return diffDays >= 0 && diffDays <= 7;
+            };
+
+            return (
+                <div className="container animate-enter" style={{ paddingBottom: 80 }}>
+                    <div className="flex justify-between items-center mb-4">
+                        <h1>{title}</h1>
+                        {title === 'Subscriptions' && (
+                            <span className="text-muted text-sm">Monthly: ${data.reduce((acc, c) => acc + (c.cycle === 'yearly' ? c.amount / 12 : c.amount), 0).toFixed(2)}</span>
+                        )}
+                    </div>
+                    {data.length === 0 ? (
+                        <div className="card flex-col items-center justify-center" style={{ padding: '3rem', textAlign: 'center' }}>
+                            <div style={{ color: 'var(--text-muted)', marginBottom: 10 }}>No records found</div>
+                            <button className="btn btn-outline" onClick={onAdd}>Add First {title}</button>
+                        </div>
+                    ) : (
+                        <div>
+                            {data.map((item, i) => (
+                                <div key={item.id} className="list-item" style={{ animationDelay: `${i * 50}ms` }}>
+                                    <div>
+                                        <div className="flex items-center">
+                                            <span style={{ fontWeight: 600, fontSize: '1rem' }}>{item.category || item.source || item.name}</span>
+                                            {type === 'sub' && checkDueSoon(item.nextDue) && <span className="badge-alert">Due Soon</span>}
+                                        </div>
+                                        <div className="text-muted text-sm">{item.date || item.nextDue} {item.note ? `• ${item.note}` : ''}</div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div style={{ fontWeight: 700, color: type === 'expense' ? 'var(--text-main)' : 'var(--success)' }}>
+                                            {type === 'expense' ? '-' : type === 'sub' ? '' : '+'} ${Number(item.amount).toLocaleString()}
+                                            {type === 'sub' && <span className="text-muted" style={{ fontSize: '0.7em', fontWeight: 400 }}>/{item.cycle === 'yearly' ? 'yr' : 'mo'}</span>}
+                                        </div>
+                                        <button onClick={() => onDelete(item.id)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', padding: 4 }}>
+                                            <Icons.Trash />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    <button className="btn-float" onClick={onAdd}>
+                        <Icons.Plus s={28} />
+                    </button>
+                </div>
+            );
+        };
+
+        // --- MAIN ---
+        function App() {
+            const [view, setView] = useState('dashboard');
+            const [modal, setModal] = useState(null); // 'expense', 'income', 'sub', 'goal'
+
+            return (
+                <FinanceProvider>
+                    <AppContent view={view} setView={setView} modal={modal} setModal={setModal} />
+                </FinanceProvider>
+            );
+        }
+
+        const AppContent = ({ view, setView, modal, setModal }) => {
+            const { expenses, income, subscriptions, deleteExpense, deleteIncome, deleteSubscription } = useFinance();
+
+            return (
+                <>
+                    <main>
+                        {view === 'dashboard' && <DashboardView onOpenModal={setModal} />}
+                        {view === 'expenses' && <TransactionList title="Expenses" data={expenses} type="expense" onDelete={deleteExpense} onAdd={() => setModal('expense')} />}
+                        {view === 'income' && <TransactionList title="Income" data={income} type="income" onDelete={deleteIncome} onAdd={() => setModal('income')} />}
+                        {view === 'subscriptions' && <TransactionList title="Subscriptions" data={subscriptions} type="sub" onDelete={deleteSubscription} onAdd={() => setModal('sub')} />}
+                    </main>
+
+                    <nav className="bottom-nav">
+                        <button className={`nav-item ${view === 'dashboard' ? 'active' : ''}`} onClick={() => setView('dashboard')}>
+                            <Icons.Dash /> <span>Dash</span>
+                        </button>
+                        <button className={`nav-item ${view === 'expenses' ? 'active' : ''}`} onClick={() => setView('expenses')}>
+                            <Icons.Wallet /> <span>Expenses</span>
+                        </button>
+                        <button className={`nav-item ${view === 'income' ? 'active' : ''}`} onClick={() => setView('income')}>
+                            <Icons.Trending /> <span>Income</span>
+                        </button>
+                        <button className={`nav-item ${view === 'subscriptions' ? 'active' : ''}`} onClick={() => setView('subscriptions')}>
+                            <Icons.Card /> <span>Subs</span>
+                        </button>
+                    </nav>
+
+                    {/* Global Modals */}
+                    <Modal isOpen={modal === 'expense'} onClose={() => setModal(null)} title="New Expense">
+                        <AddTransactionForm type="expense" onClose={() => setModal(null)} />
+                    </Modal>
+                    <Modal isOpen={modal === 'income'} onClose={() => setModal(null)} title="New Income">
+                        <AddTransactionForm type="income" onClose={() => setModal(null)} />
+                    </Modal>
+                    <Modal isOpen={modal === 'sub'} onClose={() => setModal(null)} title="New Subscription">
+                        <AddSubForm onClose={() => setModal(null)} />
+                    </Modal>
+                    <Modal isOpen={modal === 'goal'} onClose={() => setModal(null)} title="Edit Savings Goal">
+                        <EditGoalForm onClose={() => setModal(null)} />
+                    </Modal>
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
