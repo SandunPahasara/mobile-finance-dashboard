@@ -8,9 +8,13 @@ const ThemeToggle = () => {
     return (
         <button
             onClick={toggleTheme}
-            className="btn-float-theme"
-            aria-label="Toggle Theme"
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            style={{
+                position: 'absolute', top: 20, right: 20,
+                background: 'none', border: 'none',
+                color: 'var(--text-muted)', cursor: 'pointer',
+                zIndex: 50
+            }}
+            title="Toggle Theme"
         >
             {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
         </button>

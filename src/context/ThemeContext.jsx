@@ -1,21 +1,19 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-    const [theme, setTheme] = useState(() => {
-        const savedTheme = localStorage.getItem('theme');
-        return savedTheme || 'dark';
-    });
+    const [theme, setTheme] = useState(() => localStorage.getItem('finance_theme') || 'dark');
 
     useEffect(() => {
         const root = window.document.documentElement;
-        root.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+        root.classList.remove('light', 'dark');
+        root.classList.add(theme);
+        localStorage.setItem('finance_theme', theme);
     }, [theme]);
 
     const toggleTheme = () => {
-        setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
     };
 
     return (
