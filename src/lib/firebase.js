@@ -5,13 +5,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCxv8BOTZhAPU0WWf83-cHnkMmcxhWOlfQ",
-    authDomain: "finance-dashboard-app-2e4d3.firebaseapp.com",
-    projectId: "finance-dashboard-app-2e4d3",
-    storageBucket: "finance-dashboard-app-2e4d3.firebasestorage.app",
-    messagingSenderId: "710230027800",
-    appId: "1:710230027800:web:b958c1bda10f2f978fdd6d",
-    measurementId: "G-V21EQ7M0DS"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
