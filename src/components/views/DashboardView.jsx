@@ -7,7 +7,7 @@ import { TrendingUp, Wallet, Edit } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { CATEGORIES } from '../../utils/constants';
 
-const DashboardView = ({ onOpenModal }) => {
+const DashboardView = ({ onOpenModal, ...props }) => {
     const { totals, expenses, income, subscriptions, savingsGoal, formatCurrency, user } = useFinance();
 
     // Prepare Chart Data
@@ -56,13 +56,33 @@ const DashboardView = ({ onOpenModal }) => {
 
     return (
         <div className="container" style={{ paddingBottom: 80 }}>
-            <header className="flex justify-between items-center mb-4 animate-enter">
+            <header className="flex justify-between items-center mb-4 animate-enter relative">
                 <div>
                     <h1>Overview</h1>
                     <p className="text-muted">Welcome back, {user?.name || 'User'}</p>
                 </div>
-                <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #64ffda 0%, #0a192f 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontWeight: 'bold', color: '#020c1b' }}>{(user?.name || 'U').charAt(0).toUpperCase()}</span>
+                <div
+                    onClick={() => props.onViewChange && props.onViewChange('profile')}
+                    style={{
+                        width: 40, height: 40, borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #64ffda 0%, #0a192f 100%)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: 'pointer', position: 'relative', zIndex: 50,
+                        overflow: 'hidden', border: '1px solid rgba(100,255,218,0.2)'
+                    }}
+                    title="Go to Profile & Settings"
+                >
+                    {user?.profilePic ? (
+                        <img
+                            src={user.profilePic}
+                            alt="Profile"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                        />
+                    ) : null}
+                    <span style={{ fontWeight: 'bold', color: '#020c1b', display: user?.profilePic ? 'none' : 'block' }}>
+                        {(user?.name || 'U').charAt(0).toUpperCase()}
+                    </span>
                 </div>
             </header>
 

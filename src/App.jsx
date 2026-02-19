@@ -47,7 +47,7 @@ const AppContent = ({ view, setView, modal, setModal }) => {
     return (
         <>
             <main>
-                {view === 'dashboard' && <DashboardView onOpenModal={setModal} />}
+                {view === 'dashboard' && <DashboardView onOpenModal={setModal} onViewChange={setView} />}
                 {view === 'expenses' && <TransactionList title="Expenses" data={expenses} type="expense" onDelete={deleteExpense} onAdd={() => setModal('expense')} />}
                 {view === 'income' && <TransactionList title="Income" data={income} type="income" onDelete={deleteIncome} onAdd={() => setModal('income')} />}
                 {view === 'subscriptions' && <TransactionList title="Subscriptions" data={subscriptions} type="sub" onDelete={deleteSubscription} onAdd={() => setModal('sub')} />}
