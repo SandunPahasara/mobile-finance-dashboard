@@ -6,6 +6,11 @@ export const FinanceProvider = ({ children }) => {
     const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('finance_user')) || null);
     const [currency, setCurrency] = useState(() => JSON.parse(localStorage.getItem('finance_currency')) || { symbol: '$', code: 'USD', rate: 1 });
 
+    const [expenses, setExpenses] = useState(() => JSON.parse(localStorage.getItem('finance_expenses')) || []);
+    const [income, setIncome] = useState(() => JSON.parse(localStorage.getItem('finance_income')) || []);
+    const [subscriptions, setSubscriptions] = useState(() => JSON.parse(localStorage.getItem('finance_subs')) || []);
+    const [savingsGoal, setSavingsGoal] = useState(() => JSON.parse(localStorage.getItem('finance_goal')) || { target: 10000, deadline: '', current: 0 });
+
     useEffect(() => localStorage.setItem('finance_expenses', JSON.stringify(expenses)), [expenses]);
     useEffect(() => localStorage.setItem('finance_income', JSON.stringify(income)), [income]);
     useEffect(() => localStorage.setItem('finance_subs', JSON.stringify(subscriptions)), [subscriptions]);
