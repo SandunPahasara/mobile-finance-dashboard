@@ -7,6 +7,9 @@ export const ThemeProvider = ({ children }) => {
 
     useEffect(() => {
         const root = window.document.documentElement;
+        // Set date-theme attribute for CSS variables
+        root.setAttribute('data-theme', theme);
+        // Also keep class for potential Tailwind dark mode support
         root.classList.remove('light', 'dark');
         root.classList.add(theme);
         localStorage.setItem('finance_theme', theme);
