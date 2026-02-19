@@ -2,10 +2,10 @@
 
 FinanceSync is a modern, mobile-optimized personal finance dashboard designed to help users track expenses, income, subscriptions, and savings goals. It features a sleek dark mode UI, real-time data persistence with Firebase, and a responsive design that feels like a native app.
 
-![Dashboard Preview](https://via.placeholder.com/800x400?text=FinanceSync+Dashboard+Preview)
 
 ## 🚀 Features
 
+**[📱 View Live Demo](https://mobile-finance-dashboard.vercel.app/)**
 *   **Dashboard Overview**: Visualize your net worth, total income, and expenses with interactive charts.
 *   **Transaction Management**: Easily add, edit, and delete expenses and income records.
 *   **Subscription Tracker**: Keep track of recurring subscriptions and calculate monthly costs.
