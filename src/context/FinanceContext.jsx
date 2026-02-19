@@ -10,7 +10,8 @@ const FinanceContext = createContext();
 
 export const FinanceProvider = ({ children }) => {
     // Auth State
-    const [user, setUser] = useState(null);
+    const [authUser, setAuthUser] = useState(null);
+    const [dbUser, setDbUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     // Data State
@@ -20,23 +21,29 @@ export const FinanceProvider = ({ children }) => {
     const [subscriptions, setSubscriptions] = useState([]);
     const [savingsGoal, setSavingsGoal] = useState({ target: 10000, current: 0 });
 
+    // Derived User State (Merge Auth + DB)
+    const user = useMemo(() => {
+        if (!authUser) return null;
+        return { ...authUser, ...dbUser };
+    }, [authUser, dbUser]);
+
     // 1. Listen for Auth Changes
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            setUser(currentUser);
-            setLoading(false);
-
-            if (currentUser) {
-                // Determine if this is a new login where we should sync local data
+            setAuthUser(currentUser);
+            if (!currentUser) {
+                setDbUser(null);
+                setLoading(false);
+                // Clear state on logout
+                setExpenses([]);
+                setIncome([]);
+                setSubscriptions([]);
+            } else {
+                // Check for local data sync on login
                 const localDataExists = localStorage.getItem('finance_expenses');
                 if (localDataExists) {
                     await syncLocalDataToFirestore(currentUser.uid);
                 }
-            } else {
-                // fallback to local storage or clear? For now, let's just clear to avoid confusion
-                setExpenses([]);
-                setIncome([]);
-                setSubscriptions([]);
             }
         });
         return () => unsubscribe();
@@ -44,17 +51,19 @@ export const FinanceProvider = ({ children }) => {
 
     // 2. Real-time Data Listeners (Only when logged in)
     useEffect(() => {
-        if (!user) return;
+        if (!authUser) return;
 
-        const uid = user.uid;
+        const uid = authUser.uid;
 
         // User Profile & Settings (Currency, etc.)
         const unsubProfile = onSnapshot(doc(db, 'users', uid), (doc) => {
             if (doc.exists()) {
                 const data = doc.data();
+                setDbUser(data);
                 if (data.currency) setCurrency(data.currency);
                 if (data.savingsGoal) setSavingsGoal(data.savingsGoal);
             }
+            setLoading(false); // optimize loading state
         });
 
         // Sub-collections
@@ -76,7 +85,7 @@ export const FinanceProvider = ({ children }) => {
         return () => {
             unsubProfile(); unsubExp(); unsubInc(); unsubSub();
         };
-    }, [user]);
+    }, [authUser]);
 
     // 3. Helper: Sync LocalStorage to Firestore
     const syncLocalDataToFirestore = async (uid) => {
@@ -109,8 +118,9 @@ export const FinanceProvider = ({ children }) => {
                 batch.set(doc(db, 'users', uid), {
                     currency: localCurr || { symbol: '$', code: 'USD', rate: 1 },
                     savingsGoal: localGoal || { target: 10000 },
-                    email: user.email,
-                    name: user.displayName
+                    email: authUser.email,
+                    name: authUser.displayName,
+                    joined: new Date().toISOString()
                 }, { merge: true });
             }
 
@@ -122,7 +132,7 @@ export const FinanceProvider = ({ children }) => {
             localStorage.removeItem('finance_subs');
             localStorage.removeItem('finance_goal');
             localStorage.removeItem('finance_currency');
-            localStorage.removeItem('finance_user'); // Legacy user object
+            localStorage.removeItem('finance_user');
 
             console.log("Synced local data to Cloud!");
         } catch (error) {
@@ -143,46 +153,57 @@ export const FinanceProvider = ({ children }) => {
 
     const updateCurrency = async (curr) => {
         setCurrency(curr);
-        if (user) {
-            await setDoc(doc(db, 'users', user.uid), { currency: curr }, { merge: true });
+        if (authUser) {
+            await setDoc(doc(db, 'users', authUser.uid), { currency: curr }, { merge: true });
         }
     };
 
     const updateGoal = async (goal) => {
         setSavingsGoal(goal);
-        if (user) {
-            await setDoc(doc(db, 'users', user.uid), { savingsGoal: goal }, { merge: true });
+        if (authUser) {
+            await setDoc(doc(db, 'users', authUser.uid), { savingsGoal: goal }, { merge: true });
+        }
+    };
+
+    const updateUserProfile = async (data) => {
+        if (!authUser) return;
+        try {
+            await setDoc(doc(db, 'users', authUser.uid), data, { merge: true });
+            // Optimistically update dbUser
+            setDbUser(prev => ({ ...prev, ...data }));
+        } catch (error) {
+            console.error("Failed to update profile", error);
         }
     };
 
     const addExpense = async (item) => {
-        if (!user) return;
-        await addDoc(collection(db, 'users', user.uid, 'expenses'), { ...item, amount: parseFloat(item.amount) });
+        if (!authUser) return;
+        await addDoc(collection(db, 'users', authUser.uid, 'expenses'), { ...item, amount: parseFloat(item.amount) });
     };
 
     const deleteExpense = async (id) => {
-        if (!user) return;
-        await deleteDoc(doc(db, 'users', user.uid, 'expenses', id));
+        if (!authUser) return;
+        await deleteDoc(doc(db, 'users', authUser.uid, 'expenses', id));
     };
 
     const addIncome = async (item) => {
-        if (!user) return;
-        await addDoc(collection(db, 'users', user.uid, 'income'), { ...item, amount: parseFloat(item.amount) });
+        if (!authUser) return;
+        await addDoc(collection(db, 'users', authUser.uid, 'income'), { ...item, amount: parseFloat(item.amount) });
     };
 
     const deleteIncome = async (id) => {
-        if (!user) return;
-        await deleteDoc(doc(db, 'users', user.uid, 'income', id));
+        if (!authUser) return;
+        await deleteDoc(doc(db, 'users', authUser.uid, 'income', id));
     };
 
     const addSubscription = async (item) => {
-        if (!user) return;
-        await addDoc(collection(db, 'users', user.uid, 'subscriptions'), { ...item, amount: parseFloat(item.amount) });
+        if (!authUser) return;
+        await addDoc(collection(db, 'users', authUser.uid, 'subscriptions'), { ...item, amount: parseFloat(item.amount) });
     };
 
     const deleteSubscription = async (id) => {
-        if (!user) return;
-        await deleteDoc(doc(db, 'users', user.uid, 'subscriptions', id));
+        if (!authUser) return;
+        await deleteDoc(doc(db, 'users', authUser.uid, 'subscriptions', id));
     };
 
     const formatCurrency = (amount) => {
@@ -204,6 +225,7 @@ export const FinanceProvider = ({ children }) => {
             user, login, logout, loading,
             currency, updateCurrency, formatCurrency,
             expenses, income, subscriptions, savingsGoal, setSavingsGoal: updateGoal,
+            updateUserProfile, // Export new function
             addExpense, deleteExpense, addIncome, deleteIncome, addSubscription, deleteSubscription,
             totals
         }}>

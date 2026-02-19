@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
-import { Settings, Check, User } from 'lucide-react';
-
-import { Settings, CheckCircle, Smartphone, Globe } from 'lucide-react';
+import { Settings, Check, CheckCircle, Smartphone, Globe, User } from 'lucide-react';
 import { CURRENCIES } from '../../utils/constants';
 
 const OnboardingView = () => {

@@ -1,20 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFinance } from '../../context/FinanceContext';
-import { User, LogOut, Check } from 'lucide-react';
+import { User, LogOut, Check, Upload } from 'lucide-react';
+import { storage } from '../../lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const CURRENCIES = [
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-    { code: 'GBP', symbol: '£', name: 'British Pound' },
-    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-    { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-    { code: 'LKR', symbol: 'Rs', name: 'Sri Lankan Rupee' },
-    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-];
+import { CURRENCIES } from '../../utils/constants';
 
 const ProfileView = () => {
-    const { user, currency, login, logout, updateCurrency } = useFinance();
+    const { user, currency, logout, updateCurrency, updateUserProfile } = useFinance(); // Removed login, added updateUserProfile
     const [name, setName] = useState(user?.name || '');
     const [profilePic, setProfilePic] = useState(user?.profilePic || '');
     const [birthday, setBirthday] = useState(user?.birthday || '');
@@ -22,8 +15,9 @@ const ProfileView = () => {
     const [bio, setBio] = useState(user?.bio || '');
     const [selectedCurrency, setSelectedCurrency] = useState(currency.code);
     const [message, setMessage] = useState('');
+    const [uploading, setUploading] = useState(false);
 
-    const age = React.useMemo(() => {
+    const age = useMemo(() => {
         if (!birthday) return '';
         const birthDate = new Date(birthday);
         const today = new Date();
@@ -32,15 +26,48 @@ const ProfileView = () => {
         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
             age--;
         }
-        return age; // Return plain number
+        return age;
     }, [birthday]);
 
-    const handleSave = (e) => {
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const storageRef = ref(storage, `profile_pictures/${user.uid}/${file.name}_${Date.now()}`);
+            await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(storageRef);
+            setProfilePic(url);
+            setMessage('Image uploaded! Click Save (below) to apply changes.');
+        } catch (error) {
+            console.error("Upload failed", error);
+            setMessage(`Failed to upload image: ${error.message} (${error.code})`);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleSave = async (e) => {
         e.preventDefault();
         const currencyObj = CURRENCIES.find(c => c.code === selectedCurrency);
         updateCurrency(currencyObj);
-        login({ ...user, name, profilePic, birthday, job, bio });
-        setMessage('Profile updated successfully!');
+
+        try {
+            await updateUserProfile({
+                name,
+                profilePic,
+                birthday,
+                job,
+                bio,
+                updatedAt: new Date().toISOString()
+            });
+            setMessage('Profile updated successfully!');
+        } catch (error) {
+            console.error("Save failed", error);
+            setMessage('Failed to save profile.');
+        }
+
         setTimeout(() => setMessage(''), 3000);
     };
 
@@ -51,13 +78,13 @@ const ProfileView = () => {
             <div className="card animate-enter">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 30 }}>
                     {profilePic ? (
-                        <img 
-                            src={profilePic} 
-                            alt="Profile" 
-                            style={{ 
+                        <img
+                            src={profilePic}
+                            alt="Profile"
+                            style={{
                                 width: 80, height: 80, borderRadius: '50%', objectFit: 'cover',
                                 border: '2px solid var(--accent)'
-                            }} 
+                            }}
                             onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/80?text=?'; }}
                         />
                     ) : (
@@ -71,17 +98,13 @@ const ProfileView = () => {
                     )}
                     <div>
                         <div className="flex items-center gap-3">
-                             <h2 style={{ fontSize: '1.5rem', marginBottom: 5 }}>{name}</h2>
-                             {job && <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary border border-primary/20">{job}</span>}
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: 5 }}>{name}</h2>
+                            {job && <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary border border-primary/20">{job}</span>}
                         </div>
                         <p className="text-muted text-sm">
-                            Member since {new Date(user?.joined || Date.now()).getFullYear()} 
+                            Member since {new Date(user?.joined || Date.now()).getFullYear()}
                             {age && ` • ${age} years old`}
                         </p>
-                    </div>
-                </div>                    <div>
-                        <h2 style={{ fontSize: '1.5rem', marginBottom: 5 }}>{name}</h2>
-                        <p className="text-muted">Member since {new Date(user?.joined || Date.now()).getFullYear()}</p>
                     </div>
                 </div>
 
@@ -89,7 +112,21 @@ const ProfileView = () => {
                     <div className="flex gap-6 mb-6">
                         <div className="flex-1">
                             <div className="form-group">
-                                <label className="form-label">Profile Picture URL</label>
+                                <label className="form-label">Profile Picture</label>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                    <label className="btn btn-outline btn-sm pointer" style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                        <Upload size={14} />
+                                        {uploading ? 'Uploading...' : 'Upload Image'}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            style={{ display: 'none' }}
+                                            disabled={uploading}
+                                        />
+                                    </label>
+                                    <span className="text-xs text-muted">or use URL below</span>
+                                </div>
                                 <input
                                     className="form-input"
                                     value={profilePic}
@@ -163,8 +200,8 @@ const ProfileView = () => {
                     {message && <div className="badge-success mb-4" style={{ display: 'block', textAlign: 'center' }}>{message}</div>}
 
                     <div className="flex gap-4">
-                        <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-                            Save Changes
+                        <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={uploading}>
+                            {uploading ? 'Wait for Upload...' : 'Save Changes'}
                         </button>
                         <button
                             type="button"
