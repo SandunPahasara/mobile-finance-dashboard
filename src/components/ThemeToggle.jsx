@@ -9,14 +9,14 @@ const ThemeToggle = () => {
         <button
             onClick={toggleTheme}
             style={{
-                position: 'fixed', top: 20, right: 20,
+                position: 'fixed', bottom: 170, right: 20,
                 background: 'var(--bg-card)', border: '1px solid var(--border-color)',
                 color: 'var(--text-main)', cursor: 'pointer',
                 zIndex: 1000,
-                width: 40, height: 40,
-                borderRadius: '12px',
+                width: 44, height: 44,
+                borderRadius: '14px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
             }}
             title="Toggle Theme"
         >
