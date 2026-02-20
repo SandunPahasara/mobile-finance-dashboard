@@ -141,6 +141,33 @@ select {
   width: 100%;
 }
 
+/* Responsive Utilities */
+.flex-row-md {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 600px) {
+  .flex-row-md {
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  .form-input,
+  .form-select {
+    padding: 12px;
+  }
+}
+
 /* Components */
 .card {
   background-color: var(--bg-card);

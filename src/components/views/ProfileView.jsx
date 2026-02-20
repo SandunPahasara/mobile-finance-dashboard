@@ -76,7 +76,7 @@ const ProfileView = () => {
             <h1 className="mb-4">Profile & Settings</h1>
 
             <div className="card animate-enter">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 30 }}>
+                <div className="flex flex-row-md items-center gap-6 mb-8">
                     {profilePic ? (
                         <img
                             src={profilePic}
@@ -89,15 +89,15 @@ const ProfileView = () => {
                         />
                     ) : (
                         <div style={{
-                            width: 80, height: 80, borderRadius: '50%', background: 'var(--bg-secondary)',
+                            minWidth: 80, minHeight: 80, width: 80, height: 80, borderRadius: '50%', background: 'var(--bg-secondary)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent)'
                         }}>
                             {name.charAt(0).toUpperCase()}
                         </div>
                     )}
-                    <div>
-                        <div className="flex items-center gap-3">
+                    <div style={{ textAlign: 'inherit' }}>
+                        <div className="flex items-center gap-3 flex-wrap">
                             <h2 style={{ fontSize: '1.5rem', marginBottom: 5 }}>{name}</h2>
                             {job && <span className="text-xs px-2 py-1 rounded bg-primary/20 text-primary border border-primary/20">{job}</span>}
                         </div>
@@ -109,12 +109,12 @@ const ProfileView = () => {
                 </div>
 
                 <form onSubmit={handleSave}>
-                    <div className="flex gap-6 mb-6">
-                        <div className="flex-1">
+                    <div className="flex flex-row-md gap-0 md:gap-6 mb-0 md:mb-6">
+                        <div style={{ flex: 1 }}>
                             <div className="form-group">
                                 <label className="form-label">Profile Picture</label>
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                                    <label className="btn btn-outline btn-sm pointer" style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                    <label className="btn btn-outline btn-sm pointer" style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '10px 16px' }}>
                                         <Upload size={14} />
                                         {uploading ? 'Uploading...' : 'Upload Image'}
                                         <input
@@ -152,7 +152,7 @@ const ProfileView = () => {
                                 />
                             </div>
                         </div>
-                        <div className="flex-1">
+                        <div style={{ flex: 1 }}>
                             <div className="form-group">
                                 <label className="form-label">Birthday</label>
                                 <input
@@ -199,7 +199,7 @@ const ProfileView = () => {
 
                     {message && <div className="badge-success mb-4" style={{ display: 'block', textAlign: 'center' }}>{message}</div>}
 
-                    <div className="flex gap-4">
+                    <div className="flex flex-row-md gap-4">
                         <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={uploading}>
                             {uploading ? 'Wait for Upload...' : 'Save Changes'}
                         </button>
